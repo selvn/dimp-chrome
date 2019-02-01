@@ -1,0 +1,35 @@
+{
+  "name": "Hello Extensions",
+  "description" : "Base Level Extension",
+  "permissions": ["storage"],
+  "version": "1.0",
+  "manifest_version": 2,
+  "app": {
+    "background": {
+      "scripts": [
+        "third/vue/vue.runtime.min.js",
+        "background.js"]
+    }
+  },
+  "icons": {
+    "16": "images/logo_16.png",
+    "24": "images/logo_24.png",
+    "32": "images/logo_32.png",
+    "48": "images/logo_48.png",
+    "96": "images/logo_96.png"
+  },
+  "sockets": {
+    "tcp" : {
+      "connect": [""]
+    }
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "MacCtrl+Shift+F"
+      },
+      "description": "Opens hello.html"
+    }
+  }
+}

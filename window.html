@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIMP</title>
+    <link href="third/bootstrap-4.2.1-dist/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="css/style.css" rel="stylesheet" type="text/css"/>
+    <script src="third/jquery/jquery-3.3.1.min.js"></script>
+    <script src="third/popper/popper.min.js"></script>
+    <script src="third/bootstrap-4.2.1-dist/js/bootstrap.min.js"></script>
+    <script src="js/script.js"></script>
+</head>
+<body>
+<div id="app" class="container-fluid">
+    <div class="row">
+        <div class="col-3 col1">
+            <div class="form-group">
+                <label for="public_key">public key</label>
+                <textarea id="public_key" rows="3" class="form-control" placeholder="publc key here"></textarea>
+                <small id="public_key_help" class="form-text text-muted">Copy your publc key here</small>
+            </div>
+            <div class="form-group">
+                <label for="private_key">public key</label>
+                <textarea id="private_key" rows="3" class="form-control" placeholder="private key here"></textarea>
+                <small id="private_key_help" class="form-text text-muted">Copy your private_key here</small>
+            </div>
+            <button id="login_button" type="button" class="btn btn-primary">Login</button>
+            <div>{{server_message}}</div>
+        </div>
+        <div class="col-3 col2"></div>
+        <div class="col col3"></div>
+    </div>
+</div>
+</body>
+</html>

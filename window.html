@@ -9,6 +9,9 @@
     <script src="third/jquery/jquery-3.3.1.min.js"></script>
     <script src="third/popper/popper.min.js"></script>
     <script src="third/bootstrap-4.2.1-dist/js/bootstrap.min.js"></script>
+    <script src="third/jsencrypt-master/bin/jsencrypt.min.js"></script>
+    <script src="third/crypto-js.js"></script>
+    <script src="js/base58.js"></script>
     <script src="js/script.js"></script>
 </head>
 <body>
@@ -16,20 +19,41 @@
     <div class="row">
         <div class="col-3 col1">
             <div class="form-group">
+                <label for="server_address">server address</label>
+                <input type="text" id="server_address" class="form-control" placeholder="server_address:port" value="149.129.93.227:8998"/>
+            </div>
+            <div class="form-group">
+                <label for="user_seed">seed</label>
+                <input type="text" id="user_seed" class="form-control" placeholder="user_seed" value="moki"/>
+            </div>
+            <div class="form-group">
                 <label for="public_key">public key</label>
-                <textarea id="public_key" rows="3" class="form-control" placeholder="publc key here"></textarea>
+                <textarea id="public_key" rows="3" class="form-control" placeholder="publc key here">-----BEGIN PUBLIC KEY-----
+MIGJAoGBALQOcgxhhV0XiHELKYdG587Tup261qQ3ahAGPuifZvxHXTq+GgulEyXiovwrVjpz7rKXn+16HgspLHpp5agv0WsSn6k2MnQGk5RFXuilbFr/C1rEX2X7uXlUXDMpsriKFndoB1lz9P3E8FkM5ycG84hejcHB+R5yzDa4KbGeOc0tAgMBAAE=
+-----END PUBLIC KEY-----</textarea>
                 <small id="public_key_help" class="form-text text-muted">Copy your publc key here</small>
             </div>
             <div class="form-group">
                 <label for="private_key">public key</label>
-                <textarea id="private_key" rows="3" class="form-control" placeholder="private key here"></textarea>
+                <textarea id="private_key" rows="3" class="form-control" placeholder="private key here">-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQC0DnIMYYVdF4hxCymHRufO07qdutakN2oQBj7on2b8R106vhoLpRMl4qL8K1Y6c+6yl5/teh4LKSx6aeWoL9FrEp+pNjJ0BpOURV7opWxa/wtaxF9l+7l5VFwzKbK4ihZ3aAdZc/T9xPBZDOcnBvOIXo3Bwfkecsw2uCmxnjnNLQIDAQABAoGADi5wFaENsbgTh0HHjs/LHKto8JjhZHQ33pS7WjOJ1zdgtKp53y5sfGimCSH5q+drJrZSApCCcsMWrXqPO8iuX/QPak72yzTuq9MEn4tusO/5w8/g/csq+RUhlLHLdOrPfVciMBXgouT8BB6UMa0e/g8K/7JBV8v1v59ZUccSSwkCQQD67yI6uSlgy1/NWqMENpGc9tDDoZPR2zjfrXquJaUcih2dDzEbhbzHxjoScGaVcTOx/Aiu00dAutoN+Jpovpq1AkEAt7EBRCarVdo4YKKNnW3cZQ7u0taPgvc/eJrXaWES9+MpC/NZLnQNF/NZlU9/H2607/d+Xaac6wtxkIQ7O61bmQJBAOUTMThSmIeYoZiiSXcrKbsVRneRJZTKgB0SDZC1JQnsvCQJHld1u2TUfWcf3UZH1V2CK5sNnVpmOXHPpYZBmpECQBp1hJkseMGFDVneEEf86yIjZIM6JLHYq2vT4fNr6C+MqPzvsIjgboJkqyK2sLj2WVm3bJxQw4mXvGP0qBOQhQECQQCOepIyFl/a/KmjVZ5dvmU2lcHXkqrvjcAbpyO1Dw6p2OFCBTTQf3QRmCoys5/dyBGLDhRzV5Obtg6Fll/caLXs
+-----END RSA PRIVATE KEY-----</textarea>
                 <small id="private_key_help" class="form-text text-muted">Copy your private_key here</small>
             </div>
+            <div class="form-group">
+                <input type="text" id="user_fingerprint" class="form-control" placeholder="user_fingerprint" readonly/>
+            </div>
+            <div class="form-group">
+            <input type="text" id="user_address" class="form-control" placeholder="user_address" readonly/>
+            </div>
             <button id="login_button" type="button" class="btn btn-primary">Login</button>
-            <div>{{server_message}}</div>
+
         </div>
         <div class="col-3 col2"></div>
         <div class="col col3"></div>
+    </div>
+    <div class="row">
+            <textarea rows="3" class="form-control" id="system_messages"></textarea>
     </div>
 </div>
 </body>

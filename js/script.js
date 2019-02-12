@@ -59,20 +59,37 @@ function generate_address() {
     // PROCESS
     var encryptedWord = CryptoJS.enc.Base64.parse(fingerprint); // encryptedWord via Base64.parse()
     // var decrypted = CryptoJS.enc.Utf8.stringify(encryptedWord); // decrypted encryptedWord via Utf8.stringify() '75322541'
-// console.log(decrypted);
+    console.log(encryptedWord);
 
-    var sha256 = CryptoJS.SHA256(fingerprint).toString();
+    var sha256 = CryptoJS.SHA256(encryptedWord);
+    console.log(sha256);
     append_messages('sha256:'+sha256);
-    var ripemd160 = CryptoJS.RIPEMD160(sha256).toString();
+    var ripemd160 = CryptoJS.RIPEMD160(sha256);
+    console.log(ripemd160);
 
     append_messages('ripemd160:'+ripemd160);
     var network = String.fromCharCode(8);
-    var check_code = CryptoJS.SHA256( CryptoJS.SHA256(network+ripemd160).toString()).toString();
-    append_messages('check_code: '+check_code);
-    check_code = check_code.substr(0,4);
-    var address_before_base58 = network + ripemd160 + check_code;
+    var network_wordarray = CryptoJS.enc.Utf8.parse(network);
+    console.log(network_wordarray);
+    var concat_string = network_wordarray.concat(ripemd160);
+    console.log(concat_string);
+    var check_code = CryptoJS.SHA256( CryptoJS.SHA256(concat_string));
+    console.log(check_code.toString());
+    var ba = wordArrayToByteArray(check_code);
+    console.log(ba);
+    append_messages('ba: '+ba);
+    var address_before_base58 = network_wordarray.concat(ripemd160);
+    for( var i = 0; i<4; i ++)
+    {
+        var tmp = String.fromCharCode(ba[i]);
+        var tmp_wordarray = CryptoJS.enc.Utf8.parse(tmp);
+        address_before_base58.concat(tmp_wordarray);
+    }
+    address_before_base58 = network_wordarray.concat(ripemd160).toString();
+    console.log(address_before_base58);
     append_messages('address before base58: '+address_before_base58);
-    let address = encode( stringToBytes(address_before_base58));
+    var address = encode( stringToBytes(address_before_base58));
+    console.log(address);
     append_messages('address: ' + address);
     // append_messages('asdfg123456: ' + encode(stringToBytes('asdfg123456')));
 
@@ -91,3 +108,47 @@ function str2ab(str) {
 }
 
 
+
+function byteArrayToWordArray(ba) {
+    var wa = [],
+        i;
+    for (i = 0; i < ba.length; i++) {
+        wa[(i / 4) | 0] |= ba[i] << (24 - 8 * i);
+    }
+
+    return CryptoJS.lib.WordArray.create(wa, ba.length);
+}
+
+function wordToByteArray(word, length) {
+    var ba = [],
+        i,
+        xFF = 0xFF;
+    if (length > 0)
+        ba.push(word >>> 24);
+    if (length > 1)
+        ba.push((word >>> 16) & xFF);
+    if (length > 2)
+        ba.push((word >>> 8) & xFF);
+    if (length > 3)
+        ba.push(word & xFF);
+
+    return ba;
+}
+
+function wordArrayToByteArray(wordArray, length) {
+    if (wordArray.hasOwnProperty("sigBytes") && wordArray.hasOwnProperty("words")) {
+        length = wordArray.sigBytes;
+        wordArray = wordArray.words;
+    }
+
+    var result = [],
+        bytes
+    i = 0;
+    while (length > 0) {
+        bytes = wordToByteArray(wordArray[i], Math.min(4, length));
+        length -= bytes.length;
+        result.push(bytes);
+        i++;
+    }
+    return [].concat.apply([], result);
+}

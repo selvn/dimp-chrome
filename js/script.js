@@ -1,6 +1,7 @@
+var user = null;
+var client = new Client();
 document.addEventListener('DOMContentLoaded', function() {
     console.log('here');
-    console.log(document.getElementById('app'));
     // Still cannot use alert() but you can manipulate your window in other ways.
     var data = {
         logged: false, //登陆状态
@@ -9,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $('#login_button').on('click', login);
 
+    client = new Client();
+
+    var address = new Address('4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk');
 });
 
 function append_messages(new_message) {
@@ -18,34 +22,18 @@ function append_messages(new_message) {
 }
 
 function login() {
-    generate_fingerprint();
-    generate_address();
-    chrome.sockets.tcp.create({bufferSize:4096}, function(createInfo) {
-        console.log(createInfo);
-        var server_address = $('#server_address').val().split(':');
-        append_messages('connecting to '+ server_address.join(':'));
-        chrome.sockets.tcp.connect(createInfo.socketId,
-            server_address[0],parseInt( server_address[1]), function (response) {
-                append_messages(server_address[0]+':'+server_address[1]+' connected: '+response);
-                say_hello = {
-                    'sender'   : users[use_user]['id']['name']+'@'+users[use_user]['id']['address'],
-                    'receiver' : sv_server_ID['name'] + '@' + sv_server_ID['address'],
-                    'time'     : math.floor(time.time()),
-                    'meta'     : users[use_user]['meta'],
-                    'content' : {
-                        'type'    : 0x88, // DIMMessageType_Command
-                        'sn'      : 1234,
-                        'command' : "handshake",
-                        'message' : "Hello world!"
-                    }
-                };
-                var buffer = str2ab('helloworld!');
-                chrome.sockets.tcp.send(createInfo.socketId, buffer, function () {
-                    console.log('sent.');
-                });
-            });
-    });
+    var meta = new Meta($('#user_seed').val(), $('#private_key').val(), $('#public_key').val() );
+    var address = Address.generate(meta.fingerprint, 0x08);
+    var id_string = $('#user_seed').val().replaceAll('\n','') + '@' + address.address;
+    var id = new ID(id_string);
+    user = new User(id.name + '@' + id.address, $('#private_key').val(), meta );
+    client.switch_user( user);
+    var server_address = $('#server_address').val().split(':');
+
+    client.create_tcp_connection(server_address[0],parseInt( server_address[1]), client.login);
 }
+
+
 
 function generate_fingerprint() {
     // Sign with the private key...
@@ -53,54 +41,23 @@ function generate_fingerprint() {
     sign.setPrivateKey($('#private_key').val());
     var signature = sign.sign($('#user_seed').val(), CryptoJS.SHA256, "sha256");
     $('#user_fingerprint').val(signature);
+
+
+    console.log(meta.fingerprint);
 }
 function generate_address() {
     var fingerprint = $('#user_fingerprint').val();
-    // PROCESS
     var encryptedWord = CryptoJS.enc.Base64.parse(fingerprint); // encryptedWord via Base64.parse()
-    // var decrypted = CryptoJS.enc.Utf8.stringify(encryptedWord); // decrypted encryptedWord via Utf8.stringify() '75322541'
-    console.log(encryptedWord);
-
-    var sha256 = CryptoJS.SHA256(encryptedWord);
-    console.log(sha256);
-    append_messages('sha256:'+sha256);
-    var ripemd160 = CryptoJS.RIPEMD160(sha256);
-    console.log(ripemd160);
-
-    append_messages('ripemd160:'+ripemd160);
-    var network = String.fromCharCode(8);
-    var network_wordarray = CryptoJS.enc.Utf8.parse(network);
-    console.log(network_wordarray);
-    var concat_string = network_wordarray.concat(ripemd160);
-    console.log(concat_string);
-    var check_code = CryptoJS.SHA256( CryptoJS.SHA256(concat_string));
-    console.log(check_code.toString());
-    var ba = wordArrayToByteArray(check_code);
-    console.log(ba);
-    append_messages('ba: '+ba);
-    var address_before_base58 = network_wordarray.concat(ripemd160);
-    for( var i = 0; i<4; i ++)
-    {
-        var tmp = String.fromCharCode(ba[i]);
-        var tmp_wordarray = CryptoJS.enc.Utf8.parse(tmp);
-        address_before_base58.concat(tmp_wordarray);
-    }
-    address_before_base58 = network_wordarray.concat(ripemd160).toString();
-    console.log(address_before_base58);
-    append_messages('address before base58: '+address_before_base58);
-    var address = encode( stringToBytes(address_before_base58));
-    console.log(address);
-    append_messages('address: ' + address);
-    // append_messages('asdfg123456: ' + encode(stringToBytes('asdfg123456')));
-
+    var address = Address.generate( wordArrayToByteArray(encryptedWord), 0x08);
+    $('#user_address').val(address.address);
 }
 
 function ab2str(buf) {
-    return String.fromCharCode.apply(null, new Uint16Array(buf));
+    return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 function str2ab(str) {
-    var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-    var bufView = new Uint16Array(buf);
+    var buf = new ArrayBuffer(str.length); // 2 bytes for each char
+    var bufView = new Uint8Array(buf);
     for (var i=0, strLen=str.length; i < strLen; i++) {
         bufView[i] = str.charCodeAt(i);
     }
@@ -142,8 +99,8 @@ function wordArrayToByteArray(wordArray, length) {
     }
 
     var result = [],
-        bytes
-    i = 0;
+        bytes,
+        i = 0;
     while (length > 0) {
         bytes = wordToByteArray(wordArray[i], Math.min(4, length));
         length -= bytes.length;
@@ -152,3 +109,44 @@ function wordArrayToByteArray(wordArray, length) {
     }
     return [].concat.apply([], result);
 }
+
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0, l=this.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].equals(array[i]))
+                return false;
+        }
+        else if (this[i] != array[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+};
+
+
+function generate_random_string( length ) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < length; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};

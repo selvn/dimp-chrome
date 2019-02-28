@@ -1,11 +1,11 @@
-var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-var ALPHABET_MAP = {}
+var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+var ALPHABET_MAP = {};
 for(var i = 0; i < ALPHABET.length; i++) {
     ALPHABET_MAP[ALPHABET.charAt(i)] = i
 }
-var BASE = 58
+var BASE = 58;
 
-function encode(buffer) {
+function base58_encode(buffer) {
     if (buffer.length === 0) return ''
 
     var i, j, digits = [0]
@@ -35,7 +35,7 @@ function encode(buffer) {
     return digits.reverse().map(function(digit) { return ALPHABET[digit] }).join('')
 }
 
-function decode(string) {
+function base58_decode(string) {
     if (string.length === 0) return []
 
     var i, j, bytes = [0]
